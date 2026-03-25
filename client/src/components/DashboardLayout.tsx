@@ -29,8 +29,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
 
         {/* Dashboard Content Container - Adjusted for AI Assistant Hub - No horizontal padding on mobile */}
-        <div className={`${isAIAssistant ? 'px-0 md:px-8 pb-0 pt-0' : 'px-4 md:px-8 pb-32 md:pb-10 pt-4 md:pt-6'} space-y-6`}>
-          <div className={`${isAIAssistant ? 'max-w-6xl' : 'max-w-7xl'} mx-auto w-full`}>
+        <div
+          className={`${isAIAssistant
+            ? 'h-full px-0 md:px-4 pb-0 pt-0'
+            : 'px-4 md:px-8 pb-32 md:pb-10 pt-4 md:pt-6'
+            } space-y-6`}
+        >
+          <div
+            className={`${isAIAssistant
+              ? 'w-full h-full max-w-none'
+              : 'max-w-7xl mx-auto w-full'
+              }`}
+          >
             {children}
           </div>
         </div>
