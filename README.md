@@ -15,14 +15,14 @@ It’s not just a dashboard that shows sensor numbers — it **analyzes real-tim
 
 ```mermaid
 flowchart LR
-	A[Sensors\nMoisture • DHT11 • pH • Rain] --> B[NodeMCU / ESP8266]
-	B -->|WiFi| C[Node.js Backend API]
-	C --> D[(MongoDB)]
-	D --> E[Rules Engine\nAlerts + Recommendations]
-	E --> F[External LLM\nClaude / OpenAI / Groq\n(grounded context)]
-	E --> G[Next.js UI\nDashboard + Alerts + Devices]
-	F --> H[AI Assistant (Chat UI)]
-	C --> G
+  A["Sensors<br/>Soil moisture, DHT11, pH, rain"] --> B["NodeMCU (ESP8266)"]
+  B -->|WiFi| C["Node.js Backend API"]
+  C --> D[("MongoDB")]
+  D --> E["Rules Engine<br/>Alerts + Recommendations"]
+  E --> F["External LLM<br/>Claude, OpenAI, Groq<br/>Grounded context"]
+  E --> G["Next.js UI<br/>Dashboard, Alerts, Devices"]
+  F --> H["AI Assistant (Chat UI)"]
+  C --> G
 ```
 
 ### Device ingestion (one-way MVP → two-way later)
