@@ -1,289 +1,256 @@
 "use client";
 
 import DashboardLayout from "@/components/DashboardLayout";
-import { 
-  Send, 
-  ArrowBigUp, 
-  ArrowBigDown, 
-  MessageSquare, 
-  Share2, 
-  MoreHorizontal,
+import {
+  Send,
+  Mic,
   Sparkles,
-  Search,
-  Sidebar as SidebarIcon,
-  Smile,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  Info
+  Leaf,
+  Droplets,
+  Wind,
+  BarChart3,
+  User,
+  Bot,
+  History,
 } from "lucide-react";
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 
-const initialMessages = [
-  {
-    id: 1,
-    author: "AgroSense AI",
-    avatar: "/logo.png",
-    content: "Welcome to the AI Assistant. I can help you analyze your farm data, predict crop yields, or troubleshoot sensor issues. What's on your mind today?",
-    time: "2h ago",
-    votes: 42,
-    isBot: true,
-  },
-  {
-    id: 2,
-    author: "Ramesh_Farmer",
-    content: "Can you check why Soil Moisture in North Sector node-32 is regularly dropping below 30% during the afternoon?",
-    time: "1h ago",
-    votes: 3,
-    isBot: false,
-  },
-  {
-    id: 3,
-    author: "AgroSense AI",
-    avatar: "/logo.png",
-    content: "Based on the last 48 hours of data, node-32 shows a high correlation between temperature spikes (reaching 34°C) and moisture loss. This suggests high evaporation due to either suboptimal mulch coverage or a possible leak in the drip irrigation line in that specific sector.",
-    time: "45m ago",
-    votes: 89,
-    isBot: true,
-  }
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
+
+const SUGGESTIONS = [
+  { label: "Check soil moisture status", icon: <Droplets size={14} /> },
+  { label: "Should I irrigate now?", icon: <Leaf size={14} /> },
+  { label: "Analyze last 24h data", icon: <BarChart3 size={14} /> },
 ];
 
 export default function AIAssistantPage() {
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messageIdRef = useRef(0);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    
-    const newUserMsg = {
-      id: Date.now(),
-      author: "Ramesh_Farmer",
-      content: input,
-      time: "Just now",
-      votes: 1,
-      isBot: false,
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "0px";
+    const next = Math.min(el.scrollHeight, 160);
+    el.style.height = `${next}px`;
+  }, [input]);
+
+  const handleSend = (text: string = input) => {
+    const cleanText = text.trim();
+    if (!cleanText) return;
+
+    const userMsg: Message = {
+      id: String(++messageIdRef.current),
+      role: "user",
+      content: cleanText,
+      timestamp: new Date(),
     };
-    
-    setMessages([...messages, newUserMsg]);
+
+    setMessages(prev => [...prev, userMsg]);
     setInput("");
-    
-    // Simulate bot response
+    setIsTyping(true);
+
+    // Simulated AI Response
     setTimeout(() => {
-      const botMsg = {
-        id: Date.now() + 1,
-        author: "AgroSense AI",
-        avatar: "/logo.png",
-        content: "I'm processing your request using our specialized agriculture LLm model. I'll get back to you with a detailed analysis in a moment...",
-        time: "Just now",
-        votes: 0,
-        isBot: true,
+      const assistantMsg: Message = {
+        id: String(++messageIdRef.current),
+        role: "assistant",
+        content: "I'm analyzing the real-time sensor data from your IoT gateway. Based on current trends, we're seeing stable temperature but a slight increase in humidity. Your irrigation system is scheduled to activate in 2 hours, which aligns with the current crop needs.",
+        timestamp: new Date(),
       };
-      setMessages(prev => [...prev, botMsg]);
-    }, 1000);
+      setMessages(prev => [...prev, assistantMsg]);
+      setIsTyping(false);
+    }, 1500);
   };
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col lg:flex-row gap-6 max-w-[1200px] mx-auto animate-in fade-in duration-500 pb-20">
-        
-        {/* ================= MAIN CHAT AREA (Reddit Style Feed) ================= */}
-        <div className="flex-1 space-y-4">
-          
-          {/* Reddit-like Sort/Filter Bar */}
-          <div className="bg-white border border-gray-200 rounded-lg p-2 flex items-center gap-4 px-4 sticky top-[80px] z-30 shadow-sm md:shadow-none">
-            <div className="text-sm font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-              <Sparkles size={16} className="text-blue-500" />
-              Agri-Feed
-            </div>
-            <div className="h-4 w-[1px] bg-gray-200"></div>
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-              {['Hot', 'New', 'Top', 'Rising'].map((btn) => (
-                <button key={btn} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${btn === 'Hot' ? 'bg-gray-100 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}>
-                  {btn}
+      <div className="flex flex-col h-dvh overflow-hidden">
+        {/* --- Main Chat Section --- */}
+        <div className="flex-1 flex flex-col bg-white/70 backdrop-blur-xl md:border md:border-white md:rounded-3xl md:shadow-xl md:shadow-green-900/5 relative overflow-hidden rounded-none border-0">
+
+          {/* Messages Area / Welcome Screen */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 md:p-6 space-y-4 md:space-y-6 overscroll-contain">
+            {messages.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="h-full flex flex-col items-center justify-center text-center p-6 space-y-5"
+              >
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-linear-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white shadow-2xl shadow-green-200 mb-1">
+                  <Sparkles size={32} className="md:hidden" />
+                  <Sparkles size={40} className="hidden md:block" />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">Welcome to AgroSense AI</h2>
+                  <p className="text-sm md:text-base text-gray-500 font-medium max-w-md mx-auto">
+                    Your intelligent companion for farm management. Ask me about your sensors, crop health, or irrigation schedules.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg mt-6 md:mt-8">
+                  {[
+                    { label: "Analyze soil health", desc: "Get detailed nutrient data" },
+                    { label: "Irrigation plan", desc: "Optimize water usage" },
+                    { label: "Weather alerts", desc: "Upcoming frost or heat" },
+                    { label: "Crop diagnosis", desc: "Identify pest patterns" }
+                  ].map((item, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSend(item.label)}
+                      className="p-4 bg-white/85 border border-gray-100 rounded-2xl text-left hover:border-green-500 hover:shadow-lg transition-all group"
+                    >
+                      <p className="text-sm font-bold text-gray-900 group-hover:text-green-600">{item.label}</p>
+                      <p className="text-xs text-gray-400 font-medium mt-0.5">{item.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            ) : (
+              messages.map((msg) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className={`flex w-full ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div className={`flex max-w-[92%] sm:max-w-[85%] md:max-w-[75%] gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                    {/* Avatar Icons */}
+                    <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center shadow-sm ${msg.role === 'user' ? 'bg-green-600 text-white' : 'bg-white border border-gray-100 text-green-600'
+                      }`}>
+                      {msg.role === 'user' ? <User size={14} /> : <Bot size={14} />}
+                    </div>
+
+                    {/* Bubble */}
+                    <div className={`group relative p-4 rounded-2xl text-sm md:text-[15px] leading-relaxed ${msg.role === 'user'
+                      ? 'bg-green-600 text-white rounded-tr-none shadow-md'
+                      : 'bg-white border border-gray-100 text-gray-800 rounded-tl-none shadow-sm'
+                      }`}>
+                      {msg.content.split('**').map((part, i) =>
+                        i % 2 === 1 ? <strong key={i} className={msg.role === 'user' ? 'text-white' : 'text-green-700'}>{part}</strong> : part
+                      )}
+
+                      <div className={`mt-2 text-[10px] font-medium opacity-50 flex items-center gap-1 ${msg.role === 'user' ? 'justify-end' : 'justify-start'
+                        }`}>
+                        {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
+
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="flex gap-3 max-w-[85%]">
+                  <div className="w-8 h-8 rounded-full bg-white border border-gray-100 text-green-600 flex items-center justify-center">
+                    <Bot size={14} />
+                  </div>
+                  <div className="bg-white border border-gray-100 p-4 rounded-2xl rounded-tl-none flex gap-1.5 items-center">
+                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-bounce"></span>
+                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                    <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Composer (Sticky) */}
+          <div className="sticky bottom-0 z-20 bg-white/95 backdrop-blur border-t border-gray-100 p-3 md:p-6 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+            {/* Smart Suggestions Floating Above */}
+            <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar -mx-1 px-1 md:mx-0 md:px-0">
+              {SUGGESTIONS.map((sug, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSend(sug.label)}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 hover:bg-green-50 border border-gray-200 hover:border-green-200 rounded-full text-[11px] md:text-[11px] font-bold text-gray-600 hover:text-green-700 whitespace-nowrap transition-all"
+                >
+                  {sug.icon}
+                  {sug.label}
                 </button>
               ))}
             </div>
-          </div>
 
-          {/* Message List */}
-          <div className="space-y-4">
-            <AnimatePresence initial={false}>
-              {messages.map((msg) => (
-                <motion.div 
-                  key={msg.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white border border-gray-200 rounded-lg hover:border-gray-400 transition-colors cursor-pointer flex group"
-                >
-                  {/* Upvote/Downvote Column */}
-                  <div className="w-10 bg-gray-50/50 flex flex-col items-center py-2 gap-1 rounded-l-lg border-r border-gray-100">
-                    <button className="text-gray-400 hover:text-orange-600 hover:bg-gray-200 p-0.5 rounded transition-all">
-                      <ArrowBigUp size={24} />
-                    </button>
-                    <span className="text-xs font-bold text-gray-700">{msg.isBot && msg.votes === 0 ? "..." : msg.votes}</span>
-                    <button className="text-gray-400 hover:text-blue-600 hover:bg-gray-200 p-0.5 rounded transition-all">
-                      <ArrowBigDown size={24} />
-                    </button>
-                  </div>
-
-                  {/* Post Content */}
-                  <div className="flex-1 p-3 md:p-4 pr-10 relative">
-                    <div className="flex items-center gap-2 mb-2">
-                      {msg.isBot ? (
-                        <div className="w-6 h-6 rounded-full bg-green-50 flex items-center justify-center border border-green-100 overflow-hidden">
-                          <img src="/logo.png" className="w-4 h-4 object-contain" />
-                        </div>
-                      ) : (
-                        <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-[10px] text-white font-bold">RK</div>
-                      )}
-                      <span className={`text-[11px] font-bold ${msg.isBot ? 'text-green-700' : 'text-gray-900'}`}>
-                        {msg.author}
-                      </span>
-                      <span className="text-[11px] text-gray-400">· {msg.time}</span>
-                    </div>
-                    
-                    <div className="text-sm md:text-base text-gray-800 leading-relaxed font-medium">
-                      {msg.content}
-                    </div>
-
-                    {/* Bottom Action Bar */}
-                    <div className="mt-4 flex items-center gap-4">
-                      <button className="flex items-center gap-1.5 text-gray-500 hover:bg-gray-100 p-1.5 px-2 rounded font-bold text-xs transition-colors">
-                        <MessageSquare size={16} />
-                        <span>Reply</span>
-                      </button>
-                      <button className="flex items-center gap-1.5 text-gray-500 hover:bg-gray-100 p-1.5 px-2 rounded font-bold text-xs transition-colors">
-                        <Share2 size={16} />
-                        <span>Share</span>
-                      </button>
-                      <button className="flex items-center gap-1.5 text-gray-500 hover:bg-gray-100 p-1.5 px-2 rounded font-bold text-xs transition-colors">
-                        <LinkIcon size={16} />
-                        <span>Copy URL</span>
-                      </button>
-                    </div>
-
-                    <button className="absolute top-4 right-4 text-gray-300 hover:text-gray-600 transition-colors p-1">
-                      <MoreHorizontal size={18} />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-
-          {/* Reddit-like Input Box */}
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-xl sticky bottom-4 z-40 transition-all focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/20">
-            <div className="flex items-center gap-3 mb-2">
-               <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs text-white font-bold">RK</div>
-               <span className="text-xs font-bold text-gray-500 italic">Posting as Ramesh_Farmer</span>
-            </div>
-            
-            <textarea 
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="What are your thoughts or farm questions?"
-              className="w-full bg-gray-50/50 border border-transparent rounded-lg p-3 text-sm font-medium focus:outline-none focus:bg-white focus:border-gray-200 transition-all min-h-[100px] text-gray-800"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-            />
-            
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-1 text-gray-400">
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><Smile size={20} /></button>
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><ImageIcon size={20} /></button>
-                <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><LinkIcon size={20} /></button>
+            {/* Slack Input Box - Full Width on Mobile */}
+            <div className="border border-gray-200 overflow-hidden focus-within:border-green-500 transition-all shadow-sm rounded-2xl md:rounded-xl bg-white">
+              {/* Rich Text Toolbar (Visual Only) - Desktop only */}
+              <div className="hidden md:flex items-center gap-1 p-2 bg-gray-50/50 border-b border-gray-100 overflow-x-auto no-scrollbar">
+                {[
+                  { icon: <Leaf size={14} />, title: "Bold" },
+                  { icon: <Droplets size={14} />, title: "Italic" },
+                  { icon: <Wind size={14} />, title: "Strikethrough" },
+                  { icon: <BarChart3 size={14} />, title: "Link" },
+                  { icon: <History size={20} />, title: "Number List" },
+                  { icon: <Sparkles size={20} />, title: "Bullet List" },
+                ].map((item, i) => (
+                  <button key={i} title={item.title} className="p-2 hover:bg-white rounded text-gray-400 hover:text-gray-600 transition-colors shrink-0">
+                    {item.icon}
+                  </button>
+                ))}
               </div>
-              <button 
-                onClick={handleSend}
-                disabled={!input.trim()}
-                className="bg-blue-600 text-white px-6 py-2 rounded-full font-bold text-sm tracking-tight shadow-lg shadow-blue-100 hover:bg-blue-700 active:scale-95 disabled:opacity-50 disabled:scale-100 transition-all flex items-center gap-2"
-              >
-                Comment
-                <Send size={14} />
-              </button>
+
+              {/* Input Area */}
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                }}
+                placeholder="Message AgroSense AI..."
+                className="w-full bg-transparent px-4 py-3 text-[15px] leading-6 focus:outline-none resize-none min-h-11 max-h-40 text-gray-800 placeholder:text-gray-400"
+                rows={1}
+              />
+
+              {/* Bottom Actions Area */}
+              <div className="flex items-center justify-between p-2 bg-white">
+                <div className="flex items-center gap-1">
+                  <button className="p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition-colors"><Mic size={18} /></button>
+                  <button className="hidden md:block p-2 text-gray-400 hover:bg-gray-50 rounded-lg transition-colors"><Sparkles size={18} /></button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <p className="hidden md:block text-[10px] text-gray-400 font-medium px-2 italic">Shift + Enter for new line</p>
+                  <button
+                    onClick={() => handleSend()}
+                    disabled={!input.trim()}
+                    className={`flex items-center gap-2 px-5 py-2 md:py-1.5 rounded-lg font-bold text-xs md:text-sm transition-all ${input.trim()
+                      ? 'bg-green-600 text-white shadow-md shadow-green-100 hover:bg-green-700'
+                      : 'bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed'
+                      }`}
+                  >
+                    Send
+                    <Send size={14} className="md:w-3.5 md:h-3.5" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* ================= REDDIT SIDEBAR (About) ================= */}
-        <div className="lg:w-[320px] space-y-4 shrink-0 hidden lg:block">
-          
-          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-             <div className="h-10 bg-blue-500 w-full"></div>
-             <div className="p-4 pt-0">
-                <div className="flex items-center gap-3 -mt-5 mb-4">
-                   <div className="w-12 h-12 bg-white rounded-xl border border-gray-200 p-2 shadow-md">
-                      <img src="/logo.png" className="w-full h-full object-contain" />
-                   </div>
-                   <h1 className="text-base font-bold text-gray-900 mt-4 tracking-tight">r/AgroSense_AI</h1>
-                </div>
-                
-                <p className="text-sm text-gray-700 font-medium leading-relaxed mb-6">
-                  Advanced farm diagnostic and prediction engine. Powered by GPT-4 and IoT sensor data.
-                </p>
-                
-                <div className="space-y-4 border-t border-gray-100 pt-4">
-                   <div className="flex justify-between items-center">
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-gray-900">2.5k</span>
-                        <span className="text-[10px] text-gray-400 font-bold uppercase">Members</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
-                           <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                           12
-                        </span>
-                        <span className="text-[10px] text-gray-400 font-bold uppercase">Online</span>
-                      </div>
-                   </div>
-                   <button className="w-full py-2.5 bg-blue-600 text-white rounded-full font-bold text-xs hover:bg-blue-700 transition-colors shadow-lg shadow-blue-50">
-                     Join Community
-                   </button>
-                </div>
-             </div>
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-             <div className="flex items-center gap-2 mb-4 text-xs font-bold text-gray-400 uppercase tracking-widest">
-                <Info size={14} />
-                About Assistant
-             </div>
-             <div className="space-y-4">
-                <div className="pb-4 border-b border-gray-50 flex flex-col gap-1">
-                   <span className="text-xs font-bold text-gray-700 italic">Accuracy: 99.4%</span>
-                   <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-green-500 h-full w-[99%]" />
-                   </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                   <span className="text-xs font-bold text-gray-700">Capabilities:</span>
-                   <ul className="text-[11px] text-gray-500 list-disc list-inside space-y-1 font-medium">
-                      <li>Crop health analysis</li>
-                      <li>Weather correlation</li>
-                      <li>Sensor diagnostics</li>
-                      <li>Irrigation scheduling</li>
-                   </ul>
-                </div>
-             </div>
-          </div>
-
-          <div className="p-4 px-1 sticky top-[80px]">
-             <div className="flex flex-wrap gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-tight">
-                <span>User Agreement</span>
-                <span>Privacy Policy</span>
-                <span>Content Policy</span>
-                <span>Moderator Code of Conduct</span>
-             </div>
-             <p className="text-[10px] text-gray-400 mt-6 pt-4 border-t border-gray-100">
-                AgroSense AI, Inc. © 2026. All rights reserved
-             </p>
-          </div>
-        </div>
-
       </div>
     </DashboardLayout>
   );

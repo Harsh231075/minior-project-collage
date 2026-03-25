@@ -21,6 +21,7 @@ const menuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const isAIAssistant = pathname === "/ai-assistant";
 
   return (
     <>
@@ -102,32 +103,34 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* ================= MOBILE BOTTOM NAV ================= */}
-      <div className="md:hidden fixed bottom-6 left-6 right-6 bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex justify-around items-center px-4 py-3 rounded-[2rem] z-50">
-        {menuItems.map((item, i) => {
-          const Icon = item.icon;
-          const isActive =
-            pathname === item.href ||
-            (item.href !== "/" && pathname?.startsWith(item.href));
+      {/* ================= MOBILE BOTTOM NAV - Hidden on AI Assistant page ================= */}
+      {!isAIAssistant && (
+        <div className="md:hidden fixed bottom-6 left-6 right-6 bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex justify-around items-center px-4 py-3 rounded-[2rem] z-50">
+          {menuItems.map((item, i) => {
+            const Icon = item.icon;
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/" && pathname?.startsWith(item.href));
 
-          return (
-            <Link
-              key={i}
-              href={item.href}
-              className="flex flex-col items-center gap-1 transition-all active:scale-90"
-            >
-              <div className={`w-11 h-11 flex items-center justify-center rounded-2xl transition-all duration-300 ${isActive ? "bg-green-600 text-white shadow-lg shadow-green-200" : "bg-transparent text-gray-400"}`}>
-                <Icon size={20} />
-              </div>
-              <span
-                className={`text-[11px] transition-all duration-300 ${isActive ? "font-black text-green-700" : "font-bold text-gray-900"}`}
+            return (
+              <Link
+                key={i}
+                href={item.href}
+                className="flex flex-col items-center gap-1 transition-all active:scale-90"
               >
-                {item.name === "Device Status" ? "Devices" : item.name}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+                <div className={`w-11 h-11 flex items-center justify-center rounded-2xl transition-all duration-300 ${isActive ? "bg-green-600 text-white shadow-lg shadow-green-200" : "bg-transparent text-gray-400"}`}>
+                  <Icon size={20} />
+                </div>
+                <span
+                  className={`text-[11px] transition-all duration-300 ${isActive ? "font-black text-green-700" : "font-bold text-gray-900"}`}
+                >
+                  {item.name === "Device Status" ? "Devices" : item.name}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }

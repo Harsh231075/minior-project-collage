@@ -17,9 +17,20 @@
   .dashboard-card {
     @apply bg-white rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100/30 transition-all duration-300;
   }
-  
+
   .glass-panel {
     @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-lg;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }
 
@@ -53,11 +64,19 @@ html {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (prefers-color-scheme: dark) {
+
   /* Keep it light as requested */
   :root {
     --background: #F9FBFA;
