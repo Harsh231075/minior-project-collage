@@ -33,3 +33,14 @@ npm run dev
 
 Health check:
 - `GET http://localhost:4000/health`
+
+## Seed dummy data (when IoT is not connected yet)
+This will create 2 demo devices (`farm_1`, `farm_2`) and insert last 24h readings + sample alerts + recommendations.
+
+```bash
+npm run seed -- --reset
+```
+
+The command prints device tokens you can use for ingestion:
+- Header name: `x-device-token`
+- Send readings to: `POST /api/v1/ingest/readings`
