@@ -85,10 +85,10 @@ export default function AIAssistantPage() {
     <DashboardLayout>
       <div className="flex flex-col h-dvh overflow-hidden">
         {/* --- Main Chat Section --- */}
-        <div className="flex-1 flex flex-col bg-white/70 backdrop-blur-xl md:border md:border-white md:rounded-3xl md:shadow-xl md:shadow-green-900/5 relative overflow-hidden rounded-none border-0">
+        <div className="flex-1 flex flex-col bg-white md:border md:border-gray-100 md:rounded-3xl md:shadow-xl md:shadow-green-900/5 relative overflow-hidden rounded-none border-0">
 
           {/* Messages Area / Welcome Screen */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 md:p-6 space-y-4 md:space-y-6 overscroll-contain">
+          <div className="flex-1 overflow-y-auto px-4 py-4 md:p-6 space-y-4 md:space-y-6 overscroll-contain bg-gray-50">
             {messages.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}

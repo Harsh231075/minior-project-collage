@@ -10,13 +10,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isAIAssistant = pathname === '/ai-assistant';
 
   return (
-    <div className="flex bg-gray-50 min-h-dvh font-sans selection:bg-green-100 selection:text-green-900 transition-colors duration-300">
+    <div className={`flex min-h-dvh font-sans selection:bg-green-100 selection:text-green-900 transition-colors duration-300 ${isAIAssistant ? 'bg-white' : 'bg-gray-50'}`}>
       {/* Sidebar - Desktop */}
       <Sidebar />
 
       {/* Main Content Area */}
       <main
-        className={`flex-1 bg-[#F9FBFA] md:ml-72 relative transition-all duration-300 ease-in-out ${isAIAssistant
+        className={`flex-1 ${isAIAssistant ? 'bg-white' : 'bg-[#F9FBFA]'} md:ml-72 relative transition-all duration-300 ease-in-out ${isAIAssistant
           ? 'h-dvh overflow-hidden'
           : 'min-h-screen overflow-y-auto'
           }`}
