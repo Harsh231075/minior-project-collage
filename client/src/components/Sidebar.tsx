@@ -38,7 +38,7 @@ export default function Sidebar() {
               />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent leading-none">AgroSense AI</h1>
+              <h1 className="text-xl font-bold bg-linear-to-r from-green-600 to-blue-600 bg-clip-text text-transparent leading-none">AgroSense AI</h1>
               <span className="text-[10px] text-gray-500 font-medium tracking-wider uppercase mt-1">Smart Farm IoT</span>
             </div>
           </Link>
@@ -86,7 +86,7 @@ export default function Sidebar() {
             <span className="text-[15px] font-bold">Settings</span>
           </Link>
 
-          <div className="bg-gradient-to-br from-green-50 to-blue-50/50 p-4 rounded-2xl border border-green-100/50 flex items-center gap-3 shadow-sm">
+          <div className="bg-linear-to-br from-green-50 to-blue-50/50 p-4 rounded-2xl border border-green-100/50 flex items-center gap-3 shadow-sm">
             <div className="relative">
               <img
                 src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=100&h=100"
@@ -105,7 +105,7 @@ export default function Sidebar() {
 
       {/* ================= MOBILE BOTTOM NAV - Hidden on AI Assistant page ================= */}
       {!isAIAssistant && (
-        <div className="md:hidden fixed bottom-6 left-6 right-6 bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex justify-around items-center px-4 py-3 rounded-[2rem] z-50">
+        <div className="md:hidden fixed bottom-6 left-6 right-6 bg-white/90 backdrop-blur-xl border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.15)] flex justify-around items-center px-4 py-3 rounded-4xl z-50">
           {menuItems.map((item, i) => {
             const Icon = item.icon;
             const isActive =

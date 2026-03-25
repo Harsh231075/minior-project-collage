@@ -44,7 +44,7 @@ export default function SettingsPage() {
                               className="w-32 h-32 rounded-[2.5rem] object-cover ring-4 ring-green-50 shadow-2xl transition-all group-hover:ring-green-100"
                               alt="Profile"
                            />
-                           <button className="absolute bottom-1 right-1 p-2.5 bg-green-600 text-white rounded-[1rem] shadow-xl hover:scale-110 active:scale-95 transition-all">
+                           <button className="absolute bottom-1 right-1 p-2.5 bg-green-600 text-white rounded-2xl shadow-xl hover:scale-110 active:scale-95 transition-all">
                               <Camera size={18} />
                            </button>
                         </div>
@@ -72,7 +72,7 @@ export default function SettingsPage() {
                                  <input
                                     type={field.type}
                                     defaultValue={field.value}
-                                    className="pl-12 pr-6 py-4 bg-gray-50 border border-transparent rounded-[1.5rem] text-sm font-bold text-gray-800 focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500/20 focus:bg-white transition-all w-full"
+                                    className="pl-12 pr-6 py-4 bg-gray-50 border border-transparent rounded-3xl text-sm font-bold text-gray-800 focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500/20 focus:bg-white transition-all w-full"
                                  />
                               </div>
                            </div>
@@ -80,7 +80,7 @@ export default function SettingsPage() {
                      </div>
                   </div>
 
-                  <div className="bg-red-50/50 rounded-[2rem] border border-red-100 p-8 flex flex-col md:flex-row items-center justify-between gap-6 transition-all hover:bg-red-50 border-dashed">
+                  <div className="bg-red-50/50 rounded-4xl border border-red-100 p-8 flex flex-col md:flex-row items-center justify-between gap-6 transition-all hover:bg-red-50 border-dashed">
                      <div className="flex flex-col gap-1 text-center md:text-left">
                         <h4 className="text-sm font-bold text-red-900 tracking-tight uppercase">Delete Master Account</h4>
                         <p className="text-xs text-red-600/70 font-medium max-w-sm">This action is irreversible and will permanently delete all sensor data, farm mappings, and device history.</p>
