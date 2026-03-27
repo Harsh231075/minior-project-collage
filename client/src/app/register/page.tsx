@@ -24,7 +24,7 @@ export default function RegisterPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Simple validation (Optional but good)
     if (formData.password !== formData.confirmPassword) {
       alert("Passwords do not match!");
@@ -41,7 +41,7 @@ export default function RegisterPage() {
 
     // Save to localStorage
     localStorage.setItem("agrosense_user", JSON.stringify(dummyUser));
-    
+
     // Redirect to dashboard
     router.push("/");
   };
@@ -49,27 +49,18 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen bg-white font-sans text-gray-900 overflow-hidden">
       {/* Left side: Branding / Illustration (Desktop only) */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center bg-[#F1F8F1] p-12">
-        <div className="max-w-md w-full text-center lg:text-left space-y-6">
-          <div className="flex items-center space-x-2 text-emerald-800">
-            <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">A</span>
-            </div>
-            <h1 className="text-3xl font-bold tracking-tight">AgroSense AI</h1>
-          </div>
-          <p className="text-xl text-emerald-900/70 font-medium leading-relaxed">
-            Join the future of smart agriculture
-          </p>
-          <div className="relative aspect-video w-full mt-8 flex items-center justify-center">
-            <Image
-              src="/auth-illustration.png"
-              alt="AgroSense AI Illustration"
-              width={500}
-              height={500}
-              className="object-contain"
-              priority
-            />
-          </div>
+      <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-center items-center overflow-hidden h-screen sticky top-0">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <Image
+            src="/rice field-bro.svg"
+            alt="AgroSense AI Illustration"
+            fill
+            className="object-cover"
+            priority
+          />
+          {/* Subtle overlay for text readability */}
+          <div className="absolute inset-0 bg-emerald-900/10" />
         </div>
       </div>
 
