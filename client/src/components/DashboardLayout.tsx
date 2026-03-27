@@ -3,11 +3,34 @@
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import AIFloatingButton from "./AIFloatingButton";
-import { usePathname } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Basic Client-Side Auth Check
+    const user = localStorage.getItem("agrosense_user");
+    
+    if (!user) {
+      router.push("/login");
+    } else {
+      setLoading(false);
+    }
+  }, [router]);
+
   const isAIAssistant = pathname === '/ai-assistant';
+
+  if (loading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-[#F9FBFA]">
+        <div className="w-12 h-12 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex min-h-dvh font-sans selection:bg-green-100 selection:text-green-900 transition-colors duration-300 ${isAIAssistant ? 'bg-white' : 'bg-gray-50'}`}>

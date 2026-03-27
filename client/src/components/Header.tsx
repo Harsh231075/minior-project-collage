@@ -13,7 +13,6 @@ export default function Header() {
       case "/alerts": return "System Alerts";
       case "/analytics": return "Data Analytics";
       case "/devices": return "Device Status";
-      case "/settings": return "User Settings";
       case "/ai-assistant": return "AI Assistant Hub";
       default: return "AgroSense AI";
     }
@@ -26,7 +25,6 @@ export default function Header() {
       case "/alerts": return "Monitor critical warnings and active system alerts.";
       case "/analytics": return "Deep insights and historical trends from your sensor network.";
       case "/devices": return "Manage your hardware nodes, gateways, and pair new devices.";
-      case "/settings": return "Configure your account, farm zones, and notification preferences.";
       case "/ai-assistant": return "Interact with specialized agricultural AI models.";
       default: return "Smart IOT Monitoring System";
     }
