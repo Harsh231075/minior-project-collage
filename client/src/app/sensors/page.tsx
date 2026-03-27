@@ -21,7 +21,7 @@ export default function SensorsPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100/30 p-10 flex flex-col items-center justify-center min-h-[400px]">
+        <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl shadow-gray-100/30 p-10 flex flex-col items-center justify-center min-h-100">
           <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6 border border-green-100/50">
             <Database size={40} className="text-green-600" />
           </div>
