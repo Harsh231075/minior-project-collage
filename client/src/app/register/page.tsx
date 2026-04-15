@@ -92,7 +92,7 @@ export default function RegisterPage() {
                 id="name"
                 type="text"
                 required
-                placeholder="John Doe"
+                placeholder="Enter your name"
                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
                 value={formData.name}
                 onChange={handleChange}
@@ -108,7 +108,7 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   required
-                  placeholder="john@example.com"
+                  placeholder="abc@example.com"
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
                   value={formData.email}
                   onChange={handleChange}
