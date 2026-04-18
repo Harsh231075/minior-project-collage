@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { env } from "../../config/env.js";
 import { DeviceModel } from "../devices/device.model.js";
 import { SensorReadingModel } from "./reading.model.js";
+import { User } from "../users/user.model.js";
 import { toDate } from "../shared/time.js";
 
 export class DeviceAuthError extends Error { }
@@ -36,8 +37,25 @@ export async function ingestReading(params: {
 
   const timestamp = params.timestamp ? toDate(params.timestamp) : new Date();
 
-  // Store reading
-  await SensorReadingModel.create({
+  // Find user to check if monitoring is active
+  const user = await User.findOne({ deviceId: params.deviceId });
+
+  // If monitoring is disabled (Sleep Mode), skip storing the history
+  if (user && !user.isMonitoringActive) {
+    await DeviceModel.updateOne(
+      { deviceId: params.deviceId },
+      { $set: { lastSeen: new Date(), status: "online" } }
+    );
+    
+    return { 
+      deviceId: params.deviceId, 
+      storedAt: null, 
+      isMonitoringActive: false 
+    };
+  }
+
+  // Store reading only if active
+  const reading = await SensorReadingModel.create({
     deviceId: params.deviceId,
     timestamp,
     temperature: params.temperature,
@@ -53,7 +71,11 @@ export async function ingestReading(params: {
     { $set: { lastSeen: new Date(), status: "online" } }
   );
 
-  return { deviceId: params.deviceId, storedAt: timestamp.toISOString() };
+  return {
+    deviceId: params.deviceId,
+    storedAt: reading.timestamp.toISOString(),
+    isMonitoringActive: true
+  };
 }
 
 export async function registerDevice(params: { deviceId: string; name?: string }) {

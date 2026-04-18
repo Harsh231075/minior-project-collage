@@ -18,6 +18,12 @@ export async function startDataSimulator() {
       for (const user of users) {
         if (!user.deviceId) continue;
 
+        // SKIP if user has disabled monitoring
+        if (!user.isMonitoringActive) {
+          logger.debug({ deviceId: user.deviceId }, "Simulator skipped (Monitoring Disabled)");
+          continue;
+        }
+
         // Fetch the very last reading to make transitions realistic
         const lastReading = await SensorReadingModel.findOne({ deviceId: user.deviceId }).sort({ timestamp: -1 });
 

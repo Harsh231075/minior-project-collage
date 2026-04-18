@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, index: true },
     password: { type: String, required: true },
     deviceId: { type: String, required: true }, // The AS-XXXX-XXXX ID
+    isMonitoringActive: { type: Boolean, default: true },
   },
   {
     timestamps: true,
