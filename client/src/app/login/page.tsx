@@ -5,15 +5,19 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles } from "lucide-react";
+import { authService } from "@/services/auth.service";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
   // Check if already logged in
   useEffect(() => {
-    const user = localStorage.getItem("agrosense_user");
+    const user = authService.getCurrentUser();
     if (user) {
       router.push("/");
     }
@@ -24,21 +28,25 @@ export default function LoginPage() {
     setPassword("password123");
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
-    // Create dummy user
-    const dummyUser = {
-      name: "AgroSense User",
-      email: email,
-      token: "dummy-token-123",
-    };
+    try {
+      const data = await authService.login({ email, password });
 
-    // Save to localStorage
-    localStorage.setItem("agrosense_user", JSON.stringify(dummyUser));
+      // Save user and token
+      localStorage.setItem("agrosense_user", JSON.stringify(data.data.user));
+      localStorage.setItem("agrosense_token", data.data.token);
 
-    // Redirect to dashboard
-    router.push("/");
+      // Redirect to dashboard
+      router.push("/");
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || "Invalid email or password");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -80,6 +88,11 @@ export default function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm font-medium">
+                {error}
+              </div>
+            )}
             <div className="space-y-1.5">
               <label htmlFor="email" className="text-sm font-medium text-gray-700">
                 Email
@@ -88,8 +101,9 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 required
+                disabled={isLoading}
                 placeholder="Enter your email"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 disabled:opacity-50"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -103,8 +117,9 @@ export default function LoginPage() {
                 id="password"
                 type="password"
                 required
+                disabled={isLoading}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 mb-2"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 mb-2 disabled:opacity-50"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -118,15 +133,21 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-200 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+              disabled={isLoading}
+              className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl shadow-lg shadow-emerald-200 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Login
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                "Login"
+              )}
             </button>
 
             <button
               type="button"
               onClick={handleFillDemo}
-              className="w-full py-3 px-4 bg-white border border-emerald-100 text-emerald-700 font-semibold rounded-xl hover:bg-emerald-50 transition-all duration-200 flex items-center justify-center gap-2 group"
+              disabled={isLoading}
+              className="w-full py-3 px-4 bg-white border border-emerald-100 text-emerald-700 font-semibold rounded-xl hover:bg-emerald-50 transition-all duration-200 flex items-center justify-center gap-2 group disabled:opacity-50"
             >
               <Sparkles size={18} className="group-hover:rotate-12 transition-transform text-emerald-500" />
               Fill Demo Details

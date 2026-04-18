@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { authService } from "@/services/auth.service";
+
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
@@ -15,6 +17,9 @@ export default function RegisterPage() {
     deviceId: "",
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -22,28 +27,36 @@ export default function RegisterPage() {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
 
-    // Simple validation (Optional but good)
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
       return;
     }
 
-    // Create dummy user from registration data
-    const dummyUser = {
-      name: formData.name,
-      email: formData.email,
-      deviceId: formData.deviceId,
-      token: "dummy-token-reg-123",
-    };
+    setIsLoading(true);
 
-    // Save to localStorage
-    localStorage.setItem("agrosense_user", JSON.stringify(dummyUser));
+    try {
+      const data = await authService.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        deviceId: formData.deviceId,
+      });
 
-    // Redirect to dashboard
-    router.push("/");
+      // Save user and token
+      localStorage.setItem("agrosense_user", JSON.stringify(data.data.user));
+      localStorage.setItem("agrosense_token", data.data.token);
+
+      // Redirect to dashboard
+      router.push("/");
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || "Registration failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -84,6 +97,11 @@ export default function RegisterPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="p-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm font-medium">
+                {error}
+              </div>
+            )}
             <div className="space-y-1.5">
               <label htmlFor="name" className="text-sm font-semibold text-gray-700">
                 Full Name
@@ -92,8 +110,9 @@ export default function RegisterPage() {
                 id="name"
                 type="text"
                 required
+                disabled={isLoading}
                 placeholder="Enter your name"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 disabled:opacity-50"
                 value={formData.name}
                 onChange={handleChange}
               />
@@ -108,8 +127,9 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   required
+                  disabled={isLoading}
                   placeholder="abc@example.com"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 disabled:opacity-50"
                   value={formData.email}
                   onChange={handleChange}
                 />
@@ -123,8 +143,9 @@ export default function RegisterPage() {
                   id="deviceId"
                   type="text"
                   required
+                  disabled={isLoading}
                   placeholder="AS-XXXX-XXXX"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 disabled:opacity-50"
                   value={formData.deviceId}
                   onChange={handleChange}
                 />
@@ -140,8 +161,9 @@ export default function RegisterPage() {
                   id="password"
                   type="password"
                   required
+                  disabled={isLoading}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 disabled:opacity-50"
                   value={formData.password}
                   onChange={handleChange}
                 />
@@ -154,8 +176,9 @@ export default function RegisterPage() {
                   id="confirmPassword"
                   type="password"
                   required
+                  disabled={isLoading}
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 disabled:opacity-50"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                 />
@@ -164,9 +187,14 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              className="w-full py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 transition-all duration-200 active:scale-[0.98] disabled:opacity-70"
+              disabled={isLoading}
+              className="w-full py-4 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 transition-all duration-200 active:scale-[0.98] disabled:opacity-70 flex items-center justify-center gap-2"
             >
-              Create Account
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                "Create Account"
+              )}
             </button>
           </form>
 

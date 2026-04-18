@@ -16,26 +16,71 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const zones = [
-   { id: "Zone A", status: "Good", moisture: 42, temp: 28, color: "bg-green-500" },
-   { id: "Zone B", status: "Warning", moisture: 31, temp: 31, color: "bg-yellow-500" },
-   { id: "Zone C", status: "Critical", moisture: 18, temp: 34, color: "bg-red-500" },
-];
-
-const insights = [
-   { id: 1, title: "Rain detected in North Sector", time: "10m ago", icon: <AlertCircle className="text-blue-500" /> },
-   { id: 2, title: "Zone C temperature spike (+4°C)", time: "45m ago", icon: <AlertCircle className="text-red-500" /> },
-   { id: 3, title: "Irrigation completed for Zone A", time: "2h ago", icon: <CheckCircle2 className="text-green-500" /> },
-];
-
-const sensorSummary = [
-   { label: "Moisture", value: "35%", icon: Droplets, color: "text-blue-600" },
-   { label: "Temp", value: "29°C", icon: Thermometer, color: "text-orange-600" },
-   { label: "Humidity", value: "65%", icon: Wind, color: "text-teal-600" },
-   { label: "pH Level", value: "6.8", icon: FlaskConical, color: "text-purple-600" },
-];
+import { useState, useEffect } from "react";
+import { authService } from "@/services/auth.service";
+import { readingService } from "@/services/reading.service";
 
 export default function Dashboard() {
+   const [latestReading, setLatestReading] = useState<any>(null);
+   const [history, setHistory] = useState<any[]>([]);
+   const [loading, setLoading] = useState(true);
+   const [user, setUser] = useState<any>(null);
+
+   useEffect(() => {
+      const currentUser = authService.getCurrentUser();
+      setUser(currentUser);
+
+      if (currentUser?.deviceId) {
+         fetchData(currentUser.deviceId);
+      } else {
+         setLoading(false);
+      }
+   }, []);
+
+   const fetchData = async (deviceId: string) => {
+      try {
+         const [latestRes, historyRes] = await Promise.all([
+            readingService.getLatestReadings(deviceId),
+            readingService.getHistory(deviceId)
+         ]);
+         setLatestReading(latestRes.data);
+         setHistory(historyRes.data.slice(0, 3)); // Only show top 3 for insights
+      } catch (err) {
+         console.error("Failed to fetch dashboard data", err);
+      } finally {
+         setLoading(false);
+      }
+   };
+
+   const sensorSummary = latestReading ? [
+      { label: "Moisture", value: `${latestReading.soilMoisture.toFixed(1)}%`, icon: Droplets, color: "text-blue-600" },
+      { label: "Temp", value: `${latestReading.temperature.toFixed(1)}°C`, icon: Thermometer, color: "text-orange-600" },
+      { label: "Humidity", value: `${latestReading.humidity.toFixed(1)}%`, icon: Wind, color: "text-teal-600" },
+      { label: "pH Level", value: `${latestReading.phValue.toFixed(1)}`, icon: FlaskConical, color: "text-purple-600" },
+   ] : [
+      { label: "Moisture", value: "--", icon: Droplets, color: "text-blue-600" },
+      { label: "Temp", value: "--", icon: Thermometer, color: "text-orange-600" },
+      { label: "Humidity", value: "--", icon: Wind, color: "text-teal-600" },
+      { label: "pH Level", value: "--", icon: FlaskConical, color: "text-purple-600" },
+   ];
+
+   const insights = history.map((h, i) => ({
+      id: i,
+      title: `Reading recorded: ${h.temperature.toFixed(1)}°C, ${h.soilMoisture.toFixed(1)}% Moisture`,
+      time: new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      icon: <CheckCircle2 className="text-green-500" />
+   }));
+
+   if (loading) {
+      return (
+         <DashboardLayout>
+            <div className="flex items-center justify-center h-full">
+               <div className="w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+         </DashboardLayout>
+      );
+   }
+
    return (
       <DashboardLayout>
          <div className="flex flex-col gap-6 pb-10">
@@ -52,31 +97,26 @@ export default function Dashboard() {
                   <div className="space-y-4 max-w-2xl">
                      <div className="flex items-center gap-2 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full w-fit">
                         <Sparkles size={14} className="text-yellow-300 fill-yellow-300" />
-                        <span className="text-[10px] font-black uppercase tracking-widest italic">AI ACTION MGR</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest italic">Welcome, {user?.name || 'Farmer'}</span>
                      </div>
                      <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-snug">
-                        Low moisture in Zone C. Irrigation <span className="underline decoration-yellow-400 decoration-2 underline-offset-4">recommended</span> for 15 mins.
+                        Real-time monitoring for device <span className="underline decoration-yellow-400 decoration-2 underline-offset-4">{user?.deviceId || 'Unknown'}</span>
                      </h1>
                      <div className="flex flex-wrap items-center gap-3">
-                        <button className="px-6 py-3 bg-white text-green-700 rounded-xl font-black text-sm hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center gap-2 group">
+                        <button 
+                           onClick={() => fetchData(user?.deviceId)}
+                           className="px-6 py-3 bg-white text-green-700 rounded-xl font-black text-sm hover:scale-105 active:scale-95 transition-all shadow-lg flex items-center gap-2 group"
+                        >
                            <Zap size={18} className="fill-green-600 text-green-600" />
-                           Start Now
-                        </button>
-                        <button className="px-6 py-3 text-white/80 font-bold text-sm hover:text-white transition-all">
-                           Dismiss
+                           Refresh Data
                         </button>
                      </div>
                   </div>
 
                   <div className="hidden lg:flex items-center gap-4 bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-inner">
                      <div className="flex flex-col">
-                        <div className="text-[9px] font-black uppercase text-white/60 tracking-widest">Confidence</div>
-                        <div className="text-3xl font-black text-white leading-tight">94%</div>
-                     </div>
-                     <div className="w-px h-8 bg-white/10"></div>
-                     <div className="flex flex-col">
-                        <div className="text-[9px] font-black uppercase text-white/60 tracking-widest">Savings</div>
-                        <div className="text-xl font-black text-emerald-300 leading-tight">+$12.40</div>
+                        <div className="text-[9px] font-black uppercase text-white/60 tracking-widest">Global Status</div>
+                        <div className="text-3xl font-black text-white leading-tight">ACTIVE</div>
                      </div>
                   </div>
                </div>
@@ -90,42 +130,24 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between px-2">
                      <h2 className="text-lg font-black text-gray-900 tracking-tight flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                        Zone Status
+                        Current Values
                      </h2>
-                     <button className="text-[10px] font-black text-green-600 uppercase tracking-widest hover:underline decoration-2 underline-offset-4 transition-all">
-                        View Map
-                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     {zones.map((zone, i) => (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                     {sensorSummary.map((sensor, i) => (
                         <motion.div
                            key={i}
                            whileHover={{ y: -3 }}
                            className="bg-white rounded-2xl p-5 border border-gray-50 shadow-lg shadow-gray-100/30 flex flex-col gap-5 group cursor-default"
                         >
                            <div className="flex items-center justify-between">
-                              <h3 className="text-md font-black text-gray-900 tracking-tight">{zone.id}</h3>
-                              <div className={`w-8 h-8 ${zone.color} rounded-lg flex items-center justify-center shadow-md`}>
-                                 <Droplets className="text-white fill-white/10" size={16} />
+                              <h3 className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{sensor.label}</h3>
+                              <div className={`p-2 rounded-xl bg-gray-50 group-hover:bg-green-50 transition-colors`}>
+                                 <sensor.icon size={18} className={`${sensor.color}`} />
                               </div>
                            </div>
-
-                           <div className="space-y-3">
-                              <div className="flex items-center justify-between">
-                                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Moisture</span>
-                                 <span className="text-sm font-black text-gray-900">{zone.moisture}%</span>
-                              </div>
-                              <div className="w-full h-1.5 bg-gray-50 rounded-full overflow-hidden">
-                                 <div className={`h-full ${zone.color}`} style={{ width: `${zone.moisture}%` }}></div>
-                              </div>
-                              <div className="flex items-center justify-between text-[10px]">
-                                 <span className="text-gray-400 font-bold uppercase tracking-tighter">Status</span>
-                                 <span className={`font-black ${zone.status === 'Good' ? 'text-green-600' :
-                                       zone.status === 'Warning' ? 'text-orange-500' : 'text-red-500'
-                                    }`}>{zone.status}</span>
-                              </div>
-                           </div>
+                           <div className="text-2xl font-black text-gray-900 leading-tight">{sensor.value}</div>
                         </motion.div>
                      ))}
                   </div>
@@ -134,18 +156,11 @@ export default function Dashboard() {
                {/* Right Column: Global Health & History (1/3 width) */}
                <div className="lg:col-span-4 space-y-4">
                   <h2 className="text-lg font-black text-gray-900 tracking-tight px-2">Global Health</h2>
-                  <div className="grid grid-cols-2 gap-3">
-                     {sensorSummary.map((sensor, i) => (
-                        <div key={i} className="bg-white rounded-2xl p-4 border border-gray-50 shadow-md shadow-gray-100/20 flex flex-col gap-2 group">
-                           <div className={`p-2 rounded-xl bg-gray-50 group-hover:bg-green-50 w-fit transition-colors`}>
-                              <sensor.icon size={18} className={`${sensor.color}`} />
-                           </div>
-                           <div className="flex flex-col">
-                              <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">{sensor.label}</span>
-                              <span className="text-lg font-black text-gray-900 leading-tight">{sensor.value}</span>
-                           </div>
-                        </div>
-                     ))}
+                  <div className="bg-white rounded-3xl p-6 border border-gray-50 shadow-lg shadow-gray-100/30 flex flex-col items-center justify-center text-center space-y-4">
+                     <div className="w-20 h-20 rounded-full border-8 border-green-500 border-t-transparent flex items-center justify-center">
+                        <span className="text-xl font-black text-gray-900">92%</span>
+                     </div>
+                     <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Crop Performance Index</p>
                   </div>
                </div>
             </div>

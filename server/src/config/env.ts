@@ -10,6 +10,8 @@ const envSchema = z.object({
   DEVICE_TOKEN_HEADER: z.string().default("x-device-token"),
   DEVICE_OFFLINE_MINUTES: z.coerce.number().int().positive().default(10),
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
+  JWT_SECRET: z.string().default("your-secret-key-change-it"),
+  GROQ_API_KEY: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

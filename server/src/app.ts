@@ -6,6 +6,9 @@ import { pinoHttp } from "pino-http";
 import { env } from "./config/env.js";
 import { logger } from "./config/logger.js";
 import { ingestRouter } from "./modules/readings/ingest.routes.js";
+import { authRouter } from "./modules/users/auth.routes.js";
+import { aiRouter } from "./modules/ai/ai.routes.js";
+import { readingsRouter } from "./modules/readings/readings.routes.js";
 
 export function createApp() {
   const app = express();
@@ -18,6 +21,9 @@ export function createApp() {
   app.get("/health", (_req, res) => res.json({ ok: true }));
 
   app.use("/api/v1/ingest", ingestRouter);
+  app.use("/api/v1/auth", authRouter);
+  app.use("/api/v1/ai", aiRouter);
+  app.use("/api/v1/readings", readingsRouter);
 
   // Basic error handler
   app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -16,6 +16,9 @@ import {
 import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 
+import { aiService } from "@/services/ai.service";
+import { authService } from "@/services/auth.service";
+
 interface Message {
   id: string;
   role: "user" | "assistant";
@@ -53,7 +56,7 @@ export default function AIAssistantPage() {
     el.style.height = `${next}px`;
   }, [input]);
 
-  const handleSend = (text: string = input) => {
+  const handleSend = async (text: string = input) => {
     const cleanText = text.trim();
     if (!cleanText) return;
 
@@ -68,17 +71,39 @@ export default function AIAssistantPage() {
     setInput("");
     setIsTyping(true);
 
-    // Simulated AI Response
-    setTimeout(() => {
+    try {
+      // Get deviceId from service
+      const user = authService.getCurrentUser();
+      const deviceId = user?.deviceId;
+
+      // Prepare history for API
+      const history = messages.map(m => ({
+        role: m.role,
+        content: m.content
+      }));
+      history.push({ role: "user", content: cleanText });
+
+      const data = await aiService.chat(history, deviceId);
+
       const assistantMsg: Message = {
         id: String(++messageIdRef.current),
         role: "assistant",
-        content: "I'm analyzing the real-time sensor data from your IoT gateway. Based on current trends, we're seeing stable temperature but a slight increase in humidity. Your irrigation system is scheduled to activate in 2 hours, which aligns with the current crop needs.",
+        content: data.data.content,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, assistantMsg]);
+    } catch (err: any) {
+      console.error(err);
+      const errorMsg: Message = {
+        id: String(++messageIdRef.current),
+        role: "assistant",
+        content: "I'm sorry, I'm having trouble connecting to my brain right now. Please try again later.",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (

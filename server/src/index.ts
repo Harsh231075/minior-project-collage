@@ -7,6 +7,10 @@ async function main() {
   await connectDb();
 
   const app = createApp();
+  
+  // Start the background data simulator for development
+  await import("./scripts/simulator.js").then(m => m.startDataSimulator());
+
   app.listen(env.PORT, () => {
     logger.info({ port: env.PORT }, "Server started");
   });
