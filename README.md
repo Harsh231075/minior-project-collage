@@ -7,6 +7,7 @@ It’s not just a dashboard that shows sensor numbers — it **analyzes real-tim
 - **Alerts** (low moisture, high temperature, device offline)
 - A **data-aware AI Assistant** (grounded in current + past farm data)
 
+STicker par ye likho -> DEVICE ID: AS-11611101
 ---
 
 ## System Overview

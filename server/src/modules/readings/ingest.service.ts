@@ -12,13 +12,20 @@ function hashToken(token: string): string {
 }
 
 export async function verifyDeviceOrThrow(deviceId: string, token: string | undefined) {
-  if (!token) throw new DeviceAuthError("Missing device token");
+  // Token logic removed as per user request to simplify development
+  let device = await DeviceModel.findOne({ deviceId }).lean();
 
-  const tokenHash = hashToken(token);
-  const device = await DeviceModel.findOne({ deviceId }).lean();
-
-  if (!device) throw new DeviceAuthError("Unknown deviceId");
-  if (device.tokenHash !== tokenHash) throw new DeviceAuthError("Invalid device token");
+  // Auto-register if device doesn't exist
+  if (!device) {
+    console.log(`Auto-registering new device: ${deviceId}`);
+    await DeviceModel.create({
+      deviceId,
+      name: `Auto Registered Device (${deviceId})`,
+      tokenHash: "DISABLED", // No longer checked
+      status: "online",
+      lastSeen: new Date(),
+    });
+  }
 
   return { deviceId };
 }

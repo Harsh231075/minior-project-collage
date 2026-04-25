@@ -1,34 +1,25 @@
-#include <ESP8266WiFi.h>
-#include <ESP8266HTTPClient.h>
-#include <WiFiClient.h>
 #include <ArduinoJson.h>
 #include <DHT.h>
+#include <ESP8266HTTPClient.h>
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
 
 /**
  * AgroSense AI - NodeMCU Firmware (MVP)
  * Project: Mini Project Collage
- * 
- * Hardware:
- * - NodeMCU (ESP8266)
- * - DHT22 (Temperature & Humidity) - Pin D4 (GPIO2)
- * - Soil Moisture Sensor - Pin A0
- * 
- * Dependencies (Install via Arduino Library Manager):
- * - DHT sensor library (by Adafruit)
- * - ArduinoJson (by Benoit Blanchon)
  */
 
 // --- CONFIGURATION ---
-const char* WIFI_SSID = "MR_HARSH";     // Set from user's last message
-const char* WIFI_PASS = "23107510"; // Set from user's last message
+const char *WIFI_SSID = "MR_HARSH";
+const char *WIFI_PASS = "23107510";
 
 // Backend Config
-const char* BACKEND_URL = "http://192.168.1.10:4000/api/v1/ingest/readings"; 
-const char* DEVICE_ID = "ESP8266_NODE_01";
-const char* DEVICE_TOKEN = "7c37bb81321f8d8ae87c141730d1bc5394787e835e05c73f"; 
+const char *BACKEND_URL = "http://10.212.96.197:4000/api/v1/ingest/readings";
+String deviceIdStr = ""; // Will hold the unique Chip ID
+const char *DEVICE_TOKEN = "7c37bb81321f8d8ae87c141730d1bc5394787e835e05c73f";
 
 // Pins
-#define DHTPIN 2          // D4 on NodeMCU
+#define DHTPIN 2 // D4 on NodeMCU
 #define DHTTYPE DHT22
 #define SOIL_PIN A0
 
@@ -41,9 +32,13 @@ void setup() {
   Serial.begin(115200);
   dht.begin();
 
-  Serial.println("\n--- AgroSense AI NodeMCU Initializing ---");
-  
-  // WiFi setup
+  // Fetch unique Chip ID and format it
+  deviceIdStr = "AS-" + String(ESP.getChipId());
+
+  Serial.println("\n--- AgroSense AI Starting ---");
+  Serial.print("STicker par ye likho -> DEVICE ID: ");
+  Serial.println(deviceIdStr); 
+
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.print("Connecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -56,7 +51,6 @@ void setup() {
 }
 
 void loop() {
-  // Check interval
   if (millis() - lastMillis > INTERVAL) {
     lastMillis = millis();
 
@@ -74,32 +68,39 @@ void sendSensorData() {
   float h = dht.readHumidity();
   float t = dht.readTemperature();
   int soilRaw = analogRead(SOIL_PIN);
-  int soilMoisture = soilRaw; 
 
-  // Check if DHT readings are valid, if not use default values
-  if (isnan(h) || isnan(t)) {
-    Serial.println("Warning: Failed to read from DHT sensor! Sending default values.");
-    Serial.println("console message: defult value gyi h");
-    t = 27.0; // Default Temperature
-    h = 55.0; // Default Humidity
+  Serial.println("\n--- New Reading ---");
+  Serial.print("Soil Moisture (Raw): ");
+  Serial.println(soilRaw);
+
+  if (soilRaw > 1020) {
+    Serial.println("Soil Status: DRY / SENSOR DISCONNECTED");
+  } else {
+    Serial.println("Soil Status: REAL DATA READ");
   }
 
-  // Check if Soil Moisture reading is valid (Analog read always returns 0-1024, but adding check for safety)
-  if (soilRaw < 0) {
-    Serial.println("Warning: Invalid Soil Moisture reading! Sending default value.");
+  // DHT check
+  if (isnan(h) || isnan(t)) {
+    Serial.println("DHT Read Failed! Sending default values.");
     Serial.println("console message: defult value gyi h");
-    soilMoisture = 500; // Default Soil Moisture
+    t = 27.0;
+    h = 55.0;
+  } else {
+    Serial.print("DHT Data: Temp: ");
+    Serial.print(t);
+    Serial.print(" C, Hum: ");
+    Serial.print(h);
+    Serial.println(" %");
   }
 
   // 2. Prepare JSON Payload
-  // Based on ingest.schema.ts: deviceId, temperature, humidity, soilMoisture, phValue, rain
   StaticJsonDocument<256> doc;
-  doc["deviceId"] = DEVICE_ID;
+  doc["deviceId"] = deviceIdStr;
   doc["temperature"] = t;
   doc["humidity"] = h;
-  doc["soilMoisture"] = soilMoisture;
-  doc["phValue"] = 7.0; // Default since sensor not present
-  doc["rain"] = 0;      // Default since sensor not present
+  doc["soilMoisture"] = soilRaw;
+  doc["phValue"] = 7.0;
+  doc["rain"] = 0;
 
   String jsonPayload;
   serializeJson(doc, jsonPayload);
@@ -108,7 +109,7 @@ void sendSensorData() {
   WiFiClient client;
   HTTPClient http;
 
-  Serial.print("Sending data to: ");
+  Serial.print("Sending to Backend: ");
   Serial.println(BACKEND_URL);
 
   http.begin(client, BACKEND_URL);
@@ -117,15 +118,8 @@ void sendSensorData() {
 
   int httpResponseCode = http.POST(jsonPayload);
 
-  if (httpResponseCode > 0) {
-    String response = http.getString();
-    Serial.print("HTTP Response code: ");
-    Serial.println(httpResponseCode);
-    Serial.println("Response: " + response);
-  } else {
-    Serial.print("Error code: ");
-    Serial.println(httpResponseCode);
-  }
+  Serial.print("HTTP Response: ");
+  Serial.println(httpResponseCode);
 
   http.end();
 }
